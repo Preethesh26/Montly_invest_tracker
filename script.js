@@ -1,3 +1,4 @@
+
 const form = document.getElementById("expenseForm");
 const tableBody = document.getElementById("expenseTableBody");
 const totalSpentEl = document.getElementById("totalSpent");
@@ -6,18 +7,22 @@ const investmentEl = document.getElementById("investment");
 const budget = 10000;
 
 let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
-
+let isEditing = false;
+let editIndex = null;
 function updateDisplay() {
   tableBody.innerHTML = "";
   let total = 0;
 
   expenses.forEach((exp, index) => {
     const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${exp.date}</td>
-      <td>${exp.item}</td>
-      <td>₹${exp.amount}</td>
-      <td><button onclick="deleteExpense(${index})" class="delete-btn"><i class="fas fa-trash"></i></button></td>
+        row.innerHTML = `
+    <td>${exp.date}</td>
+    <td>${exp.item}</td>
+    <td>₹${exp.amount}</td>
+    <td>
+        <button onclick="editExpense(${index})" class="edit-btn"><i class="fas fa-pen"></i></button>
+        <button onclick="deleteExpense(${index})" class="delete-btn"><i class="fas fa-trash"></i></button>
+    </td>
     `;
     tableBody.appendChild(row);
     total += exp.amount;
@@ -33,6 +38,15 @@ function deleteExpense(index) {
   localStorage.setItem("expenses", JSON.stringify(expenses));
   updateDisplay();
 }
+function editExpense(index) {
+  const exp = expenses[index];
+  document.getElementById("date").value = exp.date;
+  document.getElementById("item").value = exp.item;
+  document.getElementById("amount").value = exp.amount;
+  
+  isEditing = true;
+  editIndex = index;
+}
 
 form.addEventListener("submit", e => {
   e.preventDefault();
@@ -40,9 +54,15 @@ form.addEventListener("submit", e => {
   const item = document.getElementById("item").value;
   const amount = parseFloat(document.getElementById("amount").value);
 
-  expenses.push({ date, item, amount });
-  localStorage.setItem("expenses", JSON.stringify(expenses));
+  if (isEditing) {
+    expenses[editIndex] = { date, item, amount };
+    isEditing = false;
+    editIndex = null;
+  } else {
+    expenses.push({ date, item, amount });
+  }
 
+  localStorage.setItem("expenses", JSON.stringify(expenses));
   form.reset();
   updateDisplay();
 });

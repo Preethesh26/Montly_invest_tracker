@@ -1,3 +1,4 @@
+
 body {
   font-family: Arial, sans-serif;
   background-color: #f4f4f4;
@@ -135,4 +136,17 @@ body.dark-mode table {
   background-color: #2a2a2a;
   color: #fff;
   border: none;
+}
+
+.edit-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-right: 5px;
+}
+.edit-btn i {
+  pointer-events: none;
 }
