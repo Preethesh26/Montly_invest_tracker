@@ -1,75 +1,70 @@
-let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
-let budget = parseFloat(localStorage.getItem("budget")) || 0;
-let isEditing = false;
-let editIndex = null;
+let expenses = [];
 
-const form = document.getElementById("expense-form");
+function addExpense() {
+  const date = document.getElementById("dateInput").value;
+  const item = document.getElementById("itemInput").value;
+  const amount = document.getElementById("amountInput").value;
+
+  if (date && item && amount) {
+    expenses.push({ date, item, amount: parseFloat(amount) });
+    document.getElementById("itemInput").value = "";
+    document.getElementById("amountInput").value = "";
+    updateDisplay();
+  }
+}
 
 function updateDisplay() {
-  const table = document.getElementById("expense-table");
+  const table = document.getElementById("expenseTable");
   table.innerHTML = "";
-  expenses.forEach((exp, index) => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
+
+  expenses.forEach(exp => {
+    const row = `<tr>
       <td>${exp.date}</td>
       <td>${exp.item}</td>
-      <td>₹${exp.amount}</td>
-      <td>
-        <button onclick="editExpense(${index})" class="edit-btn"><i class="fas fa-pen"></i></button>
-        <button onclick="deleteExpense(${index})" class="delete-btn"><i class="fas fa-trash"></i></button>
-      </td>
-    `;
-    table.appendChild(row);
+      <td>₹${exp.amount.toFixed(2)}</td>
+    </tr>`;
+    table.innerHTML += row;
   });
+
   updateBudgetDisplay();
-}
-
-form.addEventListener("submit", e => {
-  e.preventDefault();
-  const date = document.getElementById("date").value;
-  const item = document.getElementById("item").value;
-  const amount = parseFloat(document.getElementById("amount").value);
-
-  if (isEditing) {
-    expenses[editIndex] = { date, item, amount };
-    isEditing = false;
-    editIndex = null;
-  } else {
-    expenses.push({ date, item, amount });
-  }
-
-  localStorage.setItem("expenses", JSON.stringify(expenses));
-  form.reset();
-  updateDisplay();
-});
-
-function editExpense(index) {
-  const exp = expenses[index];
-  document.getElementById("date").value = exp.date;
-  document.getElementById("item").value = exp.item;
-  document.getElementById("amount").value = exp.amount;
-
-  isEditing = true;
-  editIndex = index;
-}
-
-function deleteExpense(index) {
-  expenses.splice(index, 1);
-  localStorage.setItem("expenses", JSON.stringify(expenses));
-  updateDisplay();
-}
-
-function setBudget() {
-  const input = document.getElementById("budgetInput").value;
-  budget = parseFloat(input) || 0;
-  localStorage.setItem("budget", budget);
-  updateBudgetDisplay();
+  generateDailySummary();
 }
 
 function updateBudgetDisplay() {
-  const totalSpent = expenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
-  const remaining = budget - totalSpent;
-  document.getElementById("budgetDisplay").innerText = `Budget: ₹${budget} | Remaining: ₹${remaining}`;
+  const total = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+  document.getElementById("totalBudget").textContent = `Total Spent: ₹${total.toFixed(2)}`;
 }
 
-updateDisplay();
+function toggleSummary() {
+  const display = document.getElementById("toggleSummary").checked;
+  document.getElementById("dailySummary").style.display = display ? "block" : "none";
+}
+
+function generateDailySummary() {
+  const dailyTotals = {};
+
+  // Group totals by date
+  expenses.forEach(exp => {
+    const date = exp.date;
+    const amount = parseFloat(exp.amount);
+    if (dailyTotals[date]) {
+      dailyTotals[date] += amount;
+    } else {
+      dailyTotals[date] = amount;
+    }
+  });
+
+  // Cumulative total by date
+  const sortedDates = Object.keys(dailyTotals).sort();
+  let runningTotal = 0;
+
+  const summaryList = document.getElementById("summaryList");
+  summaryList.innerHTML = "";
+
+  sortedDates.forEach(date => {
+    runningTotal += dailyTotals[date];
+    const li = document.createElement("li");
+    li.textContent = `📅 ${date} → ₹${runningTotal.toFixed(2)}`;
+    summaryList.appendChild(li);
+  });
+}
